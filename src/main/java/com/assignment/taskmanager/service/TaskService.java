@@ -1,8 +1,9 @@
 package com.assignment.taskmanager.service;
 
-import com.assignment.taskmanager.dto.TaskRequest;
+import com.assignment.taskmanager.dto.TaskCreateRequest;
 
 import com.assignment.taskmanager.dto.TaskResponse;
+import com.assignment.taskmanager.dto.TaskUpdateRequest;
 import com.assignment.taskmanager.exceptions.TaskNotFoundException;
 import com.assignment.taskmanager.model.Task;
 import com.assignment.taskmanager.model.TaskStatus;
@@ -10,7 +11,9 @@ import com.assignment.taskmanager.repository.TaskRepository;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -20,11 +23,11 @@ public class TaskService {
     @Autowired
     private TaskRepository repository;
 
-    public TaskResponse createTask(TaskRequest taskRequest) {
+    public TaskResponse createTask(TaskCreateRequest taskCreateRequest) {
         Task task = Task.builder()
-                .title(taskRequest.getTitle())
-                .description(taskRequest.getDescription())
-                .status(taskRequest.getStatus())
+                .title(taskCreateRequest.getTitle())
+                .description(taskCreateRequest.getDescription())
+                .status(taskCreateRequest.getStatus())
                 .build();
 
          Task savedTask = repository.save(task);
@@ -38,6 +41,8 @@ public class TaskService {
     }
 
     public List<TaskResponse> getAllTasks(int page, int size) {
+        if(page < 0) page = 0;
+        if(size <= 0 || size > 100) size = 10;
         return repository.findAll(PageRequest.of(page,size))
                 .getContent()
                 .stream()
@@ -52,13 +57,27 @@ public class TaskService {
                 .toList();
     }
 
-    public TaskResponse updateTask(Long id, @Valid TaskRequest taskRequest) {
+    public TaskResponse updateTask(Long id, TaskUpdateRequest taskUpdateRequest) {
         Task existingTask = repository.findById(id)
                 .orElseThrow(() -> new TaskNotFoundException(id));
-        existingTask.setTitle(taskRequest.getTitle());
-        existingTask.setDescription(taskRequest.getDescription());
-        existingTask.setStatus(taskRequest.getStatus());
 
+        //Validate if title is empty
+        if(taskUpdateRequest.getTitle() != null){
+            String trimmed = taskUpdateRequest.getTitle().trim();
+            if (trimmed.isEmpty()) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Title cannot be empty"
+                );
+            }
+            existingTask.setTitle(trimmed);
+        }
+        if (taskUpdateRequest.getDescription() != null) {
+            existingTask.setDescription(taskUpdateRequest.getDescription().trim());
+        }
+        if (taskUpdateRequest.getStatus() != null) {
+            existingTask.setStatus(taskUpdateRequest.getStatus());
+        }
         Task updatedTask = repository.save(existingTask);
         return mapToResponse(updatedTask);
     }

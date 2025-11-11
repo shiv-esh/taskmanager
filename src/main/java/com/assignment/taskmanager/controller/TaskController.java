@@ -1,7 +1,9 @@
 package com.assignment.taskmanager.controller;
 
-import com.assignment.taskmanager.dto.TaskRequest;
+import com.assignment.taskmanager.dto.TaskCreateRequest;
+import com.assignment.taskmanager.dto.TaskCreateRequest;
 import com.assignment.taskmanager.dto.TaskResponse;
+import com.assignment.taskmanager.dto.TaskUpdateRequest;
 import com.assignment.taskmanager.model.TaskStatus;
 import com.assignment.taskmanager.service.TaskService;
 import jakarta.validation.Valid;
@@ -19,8 +21,8 @@ public class TaskController {
     private TaskService service;
 
     @PostMapping
-    public ResponseEntity<TaskResponse> createTask(@Valid @RequestBody TaskRequest taskRequest){
-        return ResponseEntity.ok(service.createTask(taskRequest));
+    public ResponseEntity<TaskResponse> createTask(@Valid @RequestBody TaskCreateRequest taskCreateRequest){
+        return ResponseEntity.ok(service.createTask(taskCreateRequest));
     }
 
     @GetMapping ("/{id}")
@@ -43,8 +45,8 @@ public class TaskController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<TaskResponse> updateTask(@PathVariable Long id, @Valid @RequestBody TaskRequest taskRequest) {
-        return ResponseEntity.ok(service.updateTask(id,taskRequest));
+    public ResponseEntity<TaskResponse> updateTask(@PathVariable Long id, @Valid @RequestBody TaskUpdateRequest taskUpdateRequest) {
+        return ResponseEntity.ok(service.updateTask(id,taskUpdateRequest));
     }
 
     @DeleteMapping("/{id}")
